@@ -177,7 +177,7 @@ body {
   line-height: 2;
   color: var(--muted);
   margin-bottom: 2rem;
-  overflow-x: auto;
+  overflow-x: auto; /* Permite scroll no pseudo-código em telas muito pequenas */
 }
 .pseudo-block .kw { color: var(--accent); font-weight: 700; }
 .pseudo-block .cm { color: #3a3a3a; }
@@ -253,7 +253,7 @@ canvas {
   border: 1px solid var(--border); 
   border-radius: 2px; 
   display: block; 
-  max-width: 100%;
+  max-width: 100%; /* Isso faz a mágica no celular: o canvas encolhe proporcionalmente */
   height: auto; 
 }
 
@@ -369,12 +369,12 @@ footer {
 <section class="hero">
   <div class="hero-grid"></div>
   <div class="hero-inner">
-    <div class="hero-tag">algoritmos de busca</div>
+    <div class="hero-tag">backtracking</div>
     <h1>O que é<br><em>Backtracking?</em></h1>
     <p class="hero-desc">
-      Uma técnica que explora possibilidades de forma sistemática —
-      avançando quando há progresso e recuando quando encontra um beco sem saída,
-      sem desperdiçar tempo com caminhos impossíveis.
+      Um jeito inteligente de resolver problemas. Em vez de testar tudo que pode ser 
+      feito, encontra erros ou problemas rapidamente e descarta os caminhos que não 
+      funcionam.
     </p>
     <div class="hero-nav">
       <a href="#conceito" class="btn btn-accent">→ Ver conceito</a>
@@ -390,7 +390,7 @@ footer {
   <h2>A ideia central</h2>
   <p class="section-desc">
     Backtracking é uma busca em profundidade que elimina ramos impossíveis cedo,
-    antes de explorá-los por completo. Em vez de tentar todas as combinações cegas,
+    antes de explorá-los por completo. Em vez de tentar todas as combinações possíveis,
     ele verifica a validade a cada passo.
   </p>
 
@@ -398,22 +398,22 @@ footer {
     <div class="concept-card">
       <div class="num">01</div>
       <h3>Escolher</h3>
-      <p>Em cada passo, o algoritmo <span class="highlight">escolhe</span> a próxima opção disponível segundo uma ordem de prioridade definida.</p>
+      <p>Em cada passo, o algoritmo <span class="highlight">escolhe</span> a próxima opção disponível.</p>
     </div>
     <div class="concept-card">
       <div class="num">02</div>
       <h3>Verificar</h3>
-      <p>Antes de continuar, verifica se a escolha é <span class="highlight">válida</span>. Se não for, descarta imediatamente — sem explorar o ramo.</p>
+      <p>Antes de continuar, verifica se a escolha é <span class="highlight">válida</span>, ou seja, se não tem algum problema com a escolha. Se tiver algum problema, descarta essa escolha.</p>
     </div>
     <div class="concept-card">
       <div class="num">03</div>
       <h3>Avançar</h3>
-      <p>Se válida, <span class="highlight3">aprofunda</span> a busca recursivamente, acumulando decisões até chegar ao objetivo.</p>
+      <p>Se válida, <span class="highlight3">continua</span> a busca, testando opções válidas até chegar no objetivo.</p>
     </div>
     <div class="concept-card">
       <div class="num">04</div>
       <h3>Recuar</h3>
-      <p>Se chegar a um beco sem saída, <span class="highlight2">desfaz</span> a última decisão e tenta a próxima alternativa — o backtrack propriamente dito.</p>
+      <p>Se fizer alguma escolha errada, <span class="highlight2">desfaz</span> a última decisão e tenta a próxima alternativa, voltando para a fase de Verificar.</p>
     </div>
   </div>
 
@@ -476,8 +476,8 @@ footer {
   <h2>Resolvendo um Sudoku</h2>
   <p class="section-desc">
     Veja a diferença entre backtracking e força bruta no mesmo tabuleiro.
-    O backtracking descarta ramos inválidos imediatamente; a força bruta
-    monta tabuleiros completos antes de verificar conflitos.
+    O backtracking descarta escolhas erradas imediatamente; a força bruta
+    monta tabuleiros completos antes de verificar problemas.
   </p>
 
   <div class="sudoku-compare">
@@ -558,48 +558,36 @@ footer {
   function buildHistory() {
     const hist=[], vis=new Set(), par={};
     let branchId=0;
-    
-    // CORREÇÃO APLICADA: O parâmetro parentKey agora é passado na recursão
-    // para não sobrescrever o histórico de pais que compõem o caminho final.
-    function dfs(r,c,cur,isNew, parentKey){
+    function dfs(r,c,cur,isNew){
       const k=key(r,c);
       if(vis.has(k)) return false;
-      vis.add(k);
-      
-      if (parentKey !== null) par[k] = parentKey;
-      
+      vis.add(k); par[k]=null;
       const myB=isNew?++branchId:cur;
       hist.push({r,c,type:'visit',bid:myB});
-      
       if(r===END[0]&&c===END[1]) return true;
-      
       const nb=[];
       for(const[dr,dc]of DIRS){
         const nr=r+dr,nc=c+dc;
         if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&G[nr][nc]===0&&!vis.has(key(nr,nc))) nb.push([nr,nc]);
       }
       for(let i=0;i<nb.length;i++){
-        const[nr,nc]=nb[i];
-        if(dfs(nr,nc,myB,i>0, k)) return true;
+        const[nr,nc]=nb[i]; par[key(nr,nc)]=k;
+        if(dfs(nr,nc,myB,i>0)) return true;
       }
       return false;
     }
-    
-    dfs(START[0],START[1],0,true, null);
-    
+    dfs(START[0],START[1],0,true);
     const ek=key(END[0],END[1]);
     if(vis.has(ek)){
       const path=[]; let cur=ek, lim=300;
       while(cur!==null&&cur!==undefined&&lim-->0){
         const[pr,pc]=cur.split(',').map(Number);
-        path.push([pr,pc]); 
-        cur=par[cur];
+        path.push([pr,pc]); cur=par[cur];
       }
       path.reverse();
       for(const[pr,pc]of path) hist.push({r:pr,c:pc,type:'path',bid:-1});
       hist.push({r:END[0],c:END[1],type:'done',bid:-1});
     }
-    
     const allBids=[...new Set(hist.filter(h=>h.bid>=0).map(h=>h.bid))].sort((a,b)=>a-b);
     const bidMap={};
     allBids.forEach((b,i)=>bidMap[b]=i);
