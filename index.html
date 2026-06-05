@@ -143,7 +143,6 @@ body {
 .concept-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;
 }
-@media (max-width: 640px) { .concept-grid { grid-template-columns: 1fr; } }
 
 .concept-card {
   background: var(--bg2);
@@ -178,6 +177,7 @@ body {
   line-height: 2;
   color: var(--muted);
   margin-bottom: 2rem;
+  overflow-x: auto; /* Permite scroll no pseudo-código em telas muito pequenas */
 }
 .pseudo-block .kw { color: var(--accent); font-weight: 700; }
 .pseudo-block .cm { color: #3a3a3a; }
@@ -244,8 +244,18 @@ input[type=range] {
 }
 .step-progress { text-align: center; font-size: 11px; color: #3a3a3a; margin-bottom: 1rem; }
 
-.canvas-wrap { display: flex; justify-content: center; overflow-x: auto; }
-canvas { border: 1px solid var(--border); border-radius: 2px; display: block; }
+.canvas-wrap { 
+  display: flex; 
+  justify-content: center; 
+  width: 100%;
+}
+canvas { 
+  border: 1px solid var(--border); 
+  border-radius: 2px; 
+  display: block; 
+  max-width: 100%; /* Isso faz a mágica no celular: o canvas encolhe proporcionalmente */
+  height: auto; 
+}
 
 /* ── SUDOKU ── */
 #sudoku-section { border-top: 1px solid var(--border); }
@@ -253,7 +263,6 @@ canvas { border: 1px solid var(--border); border-radius: 2px; display: block; }
 .sudoku-compare {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
 }
-@media (max-width: 680px) { .sudoku-compare { grid-template-columns: 1fr; } }
 
 .sudoku-panel {
   background: var(--bg2);
@@ -324,6 +333,24 @@ canvas { border: 1px solid var(--border); border-radius: 2px; display: block; }
   display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem;
 }
 .sudoku-controls .ctrl-btn { flex: 1; min-width: 80px; font-size: 11px; padding: 5px 8px; }
+
+/* ── MEDIA QUERIES (RESPONSIVIDADE PARA CELULAR) ── */
+@media (max-width: 768px) { 
+  .concept-grid { grid-template-columns: 1fr; } 
+  .sudoku-compare { grid-template-columns: 1fr; }
+  .section { padding: 4rem 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .hero { padding: 3rem 1.5rem; }
+  .maze-ui { padding: 1rem; }
+  .sudoku-panel { padding: 1rem; }
+  .ctrl-btn { padding: 8px 12px; flex: 1; text-align: center; }
+  .controls-row { gap: 6px; }
+  .legend-row { gap: 6px; font-size: 10px; }
+  .step-info { font-size: 10px; }
+  .pseudo-block { padding: 1rem; font-size: 12px; }
+}
 
 /* ── FOOTER ── */
 footer {
@@ -593,12 +620,12 @@ footer {
     for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
       const k=key(r,c),x=c*CS,y=r*CS;
       if(G[r][c]===1){ 
-        ctx.fillStyle='#6b7280'; // Alterado para um cinza bem visível (mais contraste)
+        ctx.fillStyle='#6b7280'; 
         ctx.fillRect(x+1,y+1,CS-2,CS-2); 
       }
       else{
         const st=cellState[k];
-        let col='#1c1917'; // Caminho livre escuro mas distinto do fundo preto
+        let col='#1c1917'; 
         if(st) col=st.t==='path'?'#facc15':BRANCH_COLORS[st.ci%BRANCH_COLORS.length];
         ctx.fillStyle=col; ctx.fillRect(x+1,y+1,CS-2,CS-2);
       }
@@ -705,9 +732,6 @@ footer {
 // SUDOKU
 // ═══════════════════════════════════════════════════════════
 (function(){
-  // Novo tabuleiro projetado especificamente para:
-  // 1. Ter uma solução única garantida
-  // 2. Forçar o algoritmo de backtracking a fazer um "backtrack" real e profundo.
   const GIVEN = [
     [1, 0, 0, 4],
     [0, 4, 1, 0],
@@ -804,11 +828,9 @@ footer {
     let attempts=0, conflicts=0;
     const MAX=100; // Limita a animação para não travar o navegador
 
-    // Valores reais da solução (calculados antecipadamente)
     const SOLVED_VALS = [3, 2, 2, 3, 4, 2, 4, 2];
 
     for(const perm of permutations([1,2,3,4],empties.length)){
-      // Ignora a solução correta para adicioná-la propositalmente no final
       if(perm.join(',') === SOLVED_VALS.join(',')) continue;
 
       if(attempts >= MAX) break;
@@ -825,12 +847,11 @@ footer {
       });
     }
 
-    // Pula para a solução no final da demonstração da ineficiência
     const finalBoard=GIVEN.map(r=>[...r]);
     empties.forEach(([r,c],i)=>finalBoard[r][c]=SOLVED_VALS[i]);
     hist.push({
       board: finalBoard,
-      attempt: 12450, // Número fictício ilustrativo das tentativas que seriam feitas
+      attempt: 12450,
       conflicts: 12449,
       status: 'solved',
       perm: SOLVED_VALS
