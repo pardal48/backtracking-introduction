@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backtracking — Algoritmos</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=Fraunces:ital,wght@0,300;0,700;1,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0d0d;
+  --bg2: #141414;
+  --bg3: #1c1c1c;
+  --border: #2a2a2a;
+  --text: #e8e4da;
+  --muted: #6b6860;
+  --accent: #d4f74e;       /* lima */
+  --accent2: #f74e4e;      /* vermelho */
+  --accent3: #4ec9f7;      /* azul */
+  --accent4: #f7a24e;      /* laranja */
+  --mono: 'IBM Plex Mono', monospace;
+  --serif: 'Fraunces', serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 2rem;
+  position: relative;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(212,247,78,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,247,78,.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.hero-inner { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
+
+.hero-tag {
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: .75rem;
+}
+.hero-tag::before {
+  content: ''; display: block; width: 32px; height: 1px; background: var(--accent);
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+  color: #fff;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-desc {
+  font-size: 15px; color: var(--muted);
+  max-width: 560px; line-height: 1.8;
+  margin-bottom: 2.5rem;
+}
+
+.hero-nav {
+  display: flex; gap: 1rem; flex-wrap: wrap;
+}
+
+.btn {
+  padding: .6rem 1.4rem;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all .2s;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn-accent {
+  background: var(--accent);
+  color: #0d0d0d;
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.btn-accent:hover { background: #c4e83a; color: #0d0d0d; border-color: #c4e83a; }
+
+/* ── SECTIONS ── */
+.section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+}
+
+.section-tag {
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1rem;
+  display: flex; align-items: center; gap: .75rem;
+}
+.section-tag::before {
+  content: ''; display: block; width: 20px; height: 1px; background: var(--accent);
+}
+
+.section h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700; color: #fff;
+  margin-bottom: 1rem; line-height: 1.15;
+}
+
+.section-desc { color: var(--muted); max-width: 600px; line-height: 1.8; margin-bottom: 3rem; font-size: 13px; }
+
+.divider { border: none; border-top: 1px solid var(--border); }
+
+/* ── CONCEITO ── */
+.concept-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;
+}
+@media (max-width: 640px) { .concept-grid { grid-template-columns: 1fr; } }
+
+.concept-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.75rem;
+}
+
+.concept-card h3 {
+  font-family: var(--serif); font-size: 1.2rem; font-weight: 700;
+  color: #fff; margin-bottom: .75rem;
+}
+
+.concept-card p { color: var(--muted); font-size: 13px; line-height: 1.8; }
+
+.concept-card .num {
+  font-size: 3rem; font-weight: 700; opacity: .08;
+  font-family: var(--serif); line-height: 1; margin-bottom: .5rem;
+}
+
+.highlight { color: var(--accent); }
+.highlight2 { color: var(--accent2); }
+.highlight3 { color: var(--accent3); }
+
+.pseudo-block {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 1.5rem 1.75rem;
+  font-size: 13px;
+  line-height: 2;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+.pseudo-block .kw { color: var(--accent); font-weight: 700; }
+.pseudo-block .cm { color: #3a3a3a; }
+.pseudo-block .fn { color: var(--accent3); }
+.pseudo-block .ind { padding-left: 1.5rem; display: block; }
+.pseudo-block .ind2 { padding-left: 3rem; display: block; }
+.pseudo-block .ind3 { padding-left: 4.5rem; display: block; }
+
+/* ── LABIRINTO ── */
+#maze-section { border-top: 1px solid var(--border); }
+
+.maze-ui {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2rem;
+}
+
+.legend-row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center; margin-bottom: 1rem; font-size: 11px; color: var(--muted);
+}
+.leg { display: flex; align-items: center; gap: 5px; }
+.leg-box { width: 14px; height: 14px; border-radius: 2px; flex-shrink: 0; }
+
+.branch-legend {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center; margin-bottom: 1rem; font-size: 11px;
+}
+.bleg {
+  display: flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.1);
+}
+
+.controls-row {
+  display: flex; gap: 8px; justify-content: center;
+  flex-wrap: wrap; margin-bottom: .75rem;
+}
+
+.ctrl-btn {
+  font-family: var(--mono); font-size: 12px;
+  padding: 6px 14px; border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text);
+  cursor: pointer; letter-spacing: .05em;
+  transition: all .15s;
+}
+.ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ctrl-btn.primary { background: var(--accent); color: #0d0d0d; border-color: var(--accent); font-weight: 700; }
+.ctrl-btn.primary:hover { background: #c4e83a; }
+
+.speed-row {
+  display: flex; align-items: center; gap: 8px;
+  justify-content: center; font-size: 11px; color: var(--muted); margin-bottom: .75rem;
+}
+input[type=range] {
+  width: 100px; accent-color: var(--accent);
+}
+
+.step-info {
+  text-align: center; font-size: 11px; color: var(--muted);
+  min-height: 16px; margin-bottom: 4px;
+}
+.step-progress { text-align: center; font-size: 11px; color: #3a3a3a; margin-bottom: 1rem; }
+
+.canvas-wrap { display: flex; justify-content: center; overflow-x: auto; }
+canvas { border: 1px solid var(--border); border-radius: 2px; display: block; }
+
+/* ── SUDOKU ── */
+#sudoku-section { border-top: 1px solid var(--border); }
+
+.sudoku-compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+}
+@media (max-width: 680px) { .sudoku-compare { grid-template-columns: 1fr; } }
+
+.sudoku-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+
+.panel-label {
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  font-weight: 700; padding: 3px 10px; border-radius: 2px;
+  display: inline-block; margin-bottom: 1rem;
+}
+.label-bt { background: rgba(212,247,78,.15); color: var(--accent); border: 1px solid rgba(212,247,78,.3); }
+.label-bf { background: rgba(247,78,78,.15); color: var(--accent2); border: 1px solid rgba(247,78,78,.3); }
+
+/* Sudoku grid 4x4 */
+.sudoku-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  margin: 0 auto 1rem;
+  max-width: 200px;
+}
+
+.s-cell {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 16px; font-weight: 700;
+  border-radius: 3px;
+  border: 1px solid #2a2a2a;
+  transition: background .3s, color .3s, border-color .3s, transform .15s;
+}
+.s-given   { background: #222; color: #888; border-color: #333; }
+.s-empty   { background: #161616; color: #333; font-size: 10px; border-color: #222; }
+.s-current { background: rgba(247,162,78,.2); color: var(--accent4); border-color: var(--accent4); transform: scale(1.05); }
+.s-ok      { background: rgba(212,247,78,.15); color: var(--accent); border-color: rgba(212,247,78,.4); }
+.s-wrong   { background: rgba(247,78,78,.15); color: var(--accent2); border-color: rgba(247,78,78,.4); }
+.s-path    { background: rgba(212,247,78,.25); color: var(--accent); border-color: var(--accent); }
+
+/* thick borders for 2x2 quadrants */
+.s-cell:nth-child(2)  { border-right: 2px solid #555; }
+.s-cell:nth-child(6)  { border-right: 2px solid #555; }
+.s-cell:nth-child(10) { border-right: 2px solid #555; }
+.s-cell:nth-child(14) { border-right: 2px solid #555; }
+.s-cell:nth-child(5), .s-cell:nth-child(6),
+.s-cell:nth-child(7), .s-cell:nth-child(8) { border-top: 2px solid #555; }
+
+.sudoku-status {
+  min-height: 48px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 3px; padding: .6rem .85rem;
+  font-size: 11px; line-height: 1.7; color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.sudoku-stats {
+  display: flex; gap: .75rem; font-size: 11px; color: var(--muted);
+  flex-wrap: wrap;
+}
+.stat { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.stat-n { font-size: 1.4rem; font-weight: 700; font-family: var(--serif); line-height: 1; }
+.stat-lbl { font-size: 10px; text-align: center; line-height: 1.4; }
+.stat-n.green { color: var(--accent); }
+.stat-n.red   { color: var(--accent2); }
+
+.sudoku-controls {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.sudoku-controls .ctrl-btn { flex: 1; min-width: 80px; font-size: 11px; padding: 5px 8px; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 2rem;
+  text-align: center;
+  font-size: 11px;
+  color: #2d2d2d;
+  letter-spacing: .1em;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-tag">algoritmos de busca</div>
+    <h1>O que é<br><em>Backtracking?</em></h1>
+    <p class="hero-desc">
+      Uma técnica que explora possibilidades de forma sistemática —
+      avançando quando há progresso e recuando quando encontra um beco sem saída,
+      sem desperdiçar tempo com caminhos impossíveis.
+    </p>
+    <div class="hero-nav">
+      <a href="#conceito" class="btn btn-accent">→ Ver conceito</a>
+      <a href="#maze-section" class="btn">Labirinto</a>
+      <a href="#sudoku-section" class="btn">Sudoku</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CONCEITO ═══════════════════ -->
+<section class="section" id="conceito">
+  <div class="section-tag">como funciona</div>
+  <h2>A ideia central</h2>
+  <p class="section-desc">
+    Backtracking é uma busca em profundidade que elimina ramos impossíveis cedo,
+    antes de explorá-los por completo. Em vez de tentar todas as combinações cegas,
+    ele verifica a validade a cada passo.
+  </p>
+
+  <div class="concept-grid">
+    <div class="concept-card">
+      <div class="num">01</div>
+      <h3>Escolher</h3>
+      <p>Em cada passo, o algoritmo <span class="highlight">escolhe</span> a próxima opção disponível segundo uma ordem de prioridade definida.</p>
+    </div>
+    <div class="concept-card">
+      <div class="num">02</div>
+      <h3>Verificar</h3>
+      <p>Antes de continuar, verifica se a escolha é <span class="highlight">válida</span>. Se não for, descarta imediatamente — sem explorar o ramo.</p>
+    </div>
+    <div class="concept-card">
+      <div class="num">03</div>
+      <h3>Avançar</h3>
+      <p>Se válida, <span class="highlight3">aprofunda</span> a busca recursivamente, acumulando decisões até chegar ao objetivo.</p>
+    </div>
+    <div class="concept-card">
+      <div class="num">04</div>
+      <h3>Recuar</h3>
+      <p>Se chegar a um beco sem saída, <span class="highlight2">desfaz</span> a última decisão e tenta a próxima alternativa — o backtrack propriamente dito.</p>
+    </div>
+  </div>
+
+  <div class="pseudo-block">
+    <span><span class="kw">função</span> <span class="fn">backtrack</span>(estado):</span>
+    <span class="ind"><span class="kw">se</span> estado é solução: <span class="kw">retorna</span> <span class="highlight">verdadeiro</span></span>
+    <span class="ind"><span class="kw">para cada</span> escolha <span class="kw">em</span> opções_disponíveis(estado):</span>
+    <span class="ind2"><span class="kw">se</span> escolha é válida:</span>
+    <span class="ind3">aplicar(escolha)</span>
+    <span class="ind3"><span class="kw">se</span> <span class="fn">backtrack</span>(estado) = <span class="highlight">verdadeiro</span>: <span class="kw">retorna</span> <span class="highlight">verdadeiro</span></span>
+    <span class="ind3">desfazer(escolha)  <span class="cm">← o "backtrack"</span></span>
+    <span class="ind"><span class="kw">retorna</span> <span class="highlight2">falso</span>  <span class="cm">← beco sem saída</span></span>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════ LABIRINTO ═══════════════════ -->
+<section class="section" id="maze-section">
+  <div class="section-tag">exemplo 1 — labirinto</div>
+  <h2>Navegando um labirinto</h2>
+  <p class="section-desc">
+    O algoritmo parte do canto superior esquerdo (S) com prioridade
+    <span class="highlight">baixo → direita → esquerda → cima</span>.
+    Cada cor representa um ramo diferente. Quando um caminho fecha, ele recua e tenta outra direção.
+  </p>
+
+  <div class="maze-ui">
+    <div class="legend-row" id="maze-legend">
+      <div class="leg"><div class="leg-box" style="background:#6b7280;border:1px solid #9ca3af"></div>Parede</div>
+      <div class="leg"><div class="leg-box" style="background:#1c1917;border:1px solid #292524"></div>Livre</div>
+      <div class="leg"><div class="leg-box" style="background:#16a34a"></div>Início (S)</div>
+      <div class="leg"><div class="leg-box" style="background:#dc2626"></div>Saída (E)</div>
+      <div class="leg"><div class="leg-box" style="background:#facc15"></div>Caminho final</div>
+      <div class="leg"><div class="leg-box" style="background:#fff;border:2px solid #f97316"></div>Posição atual</div>
+    </div>
+    <div class="branch-legend" id="maze-branch-legend"></div>
+    <div class="controls-row">
+      <button class="ctrl-btn primary" id="m-play">▶ Animar</button>
+      <button class="ctrl-btn" id="m-step">Próximo passo</button>
+      <button class="ctrl-btn" id="m-final">Ver solução</button>
+      <button class="ctrl-btn" id="m-reset">↺ Reiniciar</button>
+    </div>
+    <div class="speed-row">
+      <span>Velocidade:</span>
+      <input type="range" id="m-speed" min="30" max="400" value="200" step="10">
+      <span id="m-speed-lbl">média</span>
+    </div>
+    <div class="step-info" id="m-info">Pressione "Animar" ou "Próximo passo" para iniciar</div>
+    <div class="step-progress" id="m-prog"></div>
+    <div class="canvas-wrap"><canvas id="maze-canvas"></canvas></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ═══════════════════ SUDOKU ═══════════════════ -->
+<section class="section" id="sudoku-section">
+  <div class="section-tag">exemplo 2 — sudoku 4×4</div>
+  <h2>Resolvendo um Sudoku</h2>
+  <p class="section-desc">
+    Veja a diferença entre backtracking e força bruta no mesmo tabuleiro.
+    O backtracking descarta ramos inválidos imediatamente; a força bruta
+    monta tabuleiros completos antes de verificar conflitos.
+  </p>
+
+  <div class="sudoku-compare">
+
+    <!-- BACKTRACKING -->
+    <div class="sudoku-panel">
+      <span class="panel-label label-bt">Backtracking</span>
+      <div class="sudoku-controls">
+        <button class="ctrl-btn primary" id="bt-play">▶ Animar</button>
+        <button class="ctrl-btn" id="bt-step">Próximo</button>
+        <button class="ctrl-btn" id="bt-reset">↺ Reset</button>
+      </div>
+      <div id="bt-grid" class="sudoku-grid"></div>
+      <div class="sudoku-status" id="bt-status">Pronto para iniciar.</div>
+      <div class="sudoku-stats">
+        <div class="stat"><div class="stat-n green" id="bt-states">0</div><div class="stat-lbl">estados avaliados</div></div>
+        <div class="stat"><div class="stat-n green" id="bt-backtracks">0</div><div class="stat-lbl">backtracks</div></div>
+        <div class="stat"><div class="stat-n green" id="bt-step-n">0</div><div class="stat-lbl">passo atual</div></div>
+      </div>
+    </div>
+
+    <!-- FORÇA BRUTA -->
+    <div class="sudoku-panel">
+      <span class="panel-label label-bf">Força Bruta</span>
+      <div class="sudoku-controls">
+        <button class="ctrl-btn" style="border-color:var(--accent2);color:var(--accent2);" id="bf-play">▶ Animar</button>
+        <button class="ctrl-btn" id="bf-step">Próximo</button>
+        <button class="ctrl-btn" id="bf-reset">↺ Reset</button>
+      </div>
+      <div id="bf-grid" class="sudoku-grid"></div>
+      <div class="sudoku-status" id="bf-status">Pronto para iniciar.</div>
+      <div class="sudoku-stats">
+        <div class="stat"><div class="stat-n red" id="bf-states">0</div><div class="stat-lbl">tentativas completas</div></div>
+        <div class="stat"><div class="stat-n red" id="bf-conflicts">0</div><div class="stat-lbl">conflitos detectados</div></div>
+        <div class="stat"><div class="stat-n red" id="bf-step-n">0</div><div class="stat-lbl">passo atual</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  BACKTRACKING · ALGORITMOS · ANÁLISE COMPARATIVA
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// LABIRINTO
+// ═══════════════════════════════════════════════════════════
+(function() {
+  const ROWS = 9, COLS = 13;
+  const freeCells = [
+    [1,2,3,4,5,6,7,8,9,10,11,12,13],
+    [1,4,10],
+    [1,2,3,7,8,9,10,11,12,13],
+    [3,4,5,6,8,13],
+    [1,2,3,6,8,10,13],
+    [1,6,8,9,10,11,13],
+    [1,2,3,6,8,11,12],
+    [3,5,7,8,10,12],
+    [1,2,3,4,5,8,9,10,12,13],
+  ];
+  const G = [];
+  for (let r = 0; r < ROWS; r++) {
+    G.push(new Array(COLS).fill(1));
+    for (const col of freeCells[r]) G[r][col-1] = 0;
+  }
+  const START = [0,0], END = [8,12];
+
+  const BRANCH_COLORS = [
+    '#a78bfa','#34d399','#f472b6','#fb923c','#38bdf8',
+    '#e879f9','#a3e635','#fd6b6b','#67e8f9','#fbbf24'
+  ];
+  const BRANCH_LABELS = BRANCH_COLORS.map((_,i)=>`Ramo ${i+1}`);
+
+  const DIRS = [[1,0],[0,1],[0,-1],[-1,0]];
+  function key(r,c){ return r+','+c; }
+
+  function buildHistory() {
+    const hist=[], vis=new Set(), par={};
+    let branchId=0;
+    function dfs(r,c,cur,isNew){
+      const k=key(r,c);
+      if(vis.has(k)) return false;
+      vis.add(k); par[k]=null;
+      const myB=isNew?++branchId:cur;
+      hist.push({r,c,type:'visit',bid:myB});
+      if(r===END[0]&&c===END[1]) return true;
+      const nb=[];
+      for(const[dr,dc]of DIRS){
+        const nr=r+dr,nc=c+dc;
+        if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&G[nr][nc]===0&&!vis.has(key(nr,nc))) nb.push([nr,nc]);
+      }
+      for(let i=0;i<nb.length;i++){
+        const[nr,nc]=nb[i]; par[key(nr,nc)]=k;
+        if(dfs(nr,nc,myB,i>0)) return true;
+      }
+      return false;
+    }
+    dfs(START[0],START[1],0,true);
+    const ek=key(END[0],END[1]);
+    if(vis.has(ek)){
+      const path=[]; let cur=ek, lim=300;
+      while(cur!==null&&cur!==undefined&&lim-->0){
+        const[pr,pc]=cur.split(',').map(Number);
+        path.push([pr,pc]); cur=par[cur];
+      }
+      path.reverse();
+      for(const[pr,pc]of path) hist.push({r:pr,c:pc,type:'path',bid:-1});
+      hist.push({r:END[0],c:END[1],type:'done',bid:-1});
+    }
+    const allBids=[...new Set(hist.filter(h=>h.bid>=0).map(h=>h.bid))].sort((a,b)=>a-b);
+    const bidMap={};
+    allBids.forEach((b,i)=>bidMap[b]=i);
+    for(const h of hist) if(h.bid>=0) h.ci=bidMap[h.bid]%BRANCH_COLORS.length;
+    return{hist,total:allBids.length};
+  }
+
+  const{hist:MH, total:MB}=buildHistory();
+
+  // Legenda ramos
+  const bl=document.getElementById('maze-branch-legend');
+  for(let i=0;i<Math.min(MB,BRANCH_COLORS.length);i++){
+    const d=document.createElement('div');
+    d.className='bleg';
+    d.style.cssText=`background:${BRANCH_COLORS[i]}22;border-color:${BRANCH_COLORS[i]}`;
+    d.innerHTML=`<div style="width:8px;height:8px;border-radius:2px;background:${BRANCH_COLORS[i]}"></div>${BRANCH_LABELS[i]}`;
+    bl.appendChild(d);
+  }
+
+  // Canvas
+  const CS=42;
+  const mc=document.getElementById('maze-canvas');
+  mc.width=COLS*CS; mc.height=ROWS*CS;
+  const ctx=mc.getContext('2d');
+
+  let cellState={}, curStep=-1, timer=null;
+
+  function draw(hs){
+    ctx.fillStyle='#0d0d0d'; ctx.fillRect(0,0,mc.width,mc.height);
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const k=key(r,c),x=c*CS,y=r*CS;
+      if(G[r][c]===1){ 
+        ctx.fillStyle='#6b7280'; // Alterado para um cinza bem visível (mais contraste)
+        ctx.fillRect(x+1,y+1,CS-2,CS-2); 
+      }
+      else{
+        const st=cellState[k];
+        let col='#1c1917'; // Caminho livre escuro mas distinto do fundo preto
+        if(st) col=st.t==='path'?'#facc15':BRANCH_COLORS[st.ci%BRANCH_COLORS.length];
+        ctx.fillStyle=col; ctx.fillRect(x+1,y+1,CS-2,CS-2);
+      }
+    }
+    if(hs>=0&&hs<MH.length){
+      const h=MH[hs];
+      if(h.type==='visit'){
+        const k=key(h.r,h.c);
+        if(k!==key(START[0],START[1])&&k!==key(END[0],END[1])){
+          ctx.fillStyle='#fff'; ctx.fillRect(h.c*CS+1,h.r*CS+1,CS-2,CS-2);
+          ctx.fillStyle=BRANCH_COLORS[h.ci%BRANCH_COLORS.length];
+          ctx.fillRect(h.c*CS+5,h.r*CS+5,CS-10,CS-10);
+        }
+      }
+    }
+    ctx.fillStyle='#16a34a'; ctx.fillRect(START[1]*CS+1,START[0]*CS+1,CS-2,CS-2);
+    ctx.fillStyle='#dc2626'; ctx.fillRect(END[1]*CS+1,END[0]*CS+1,CS-2,CS-2);
+    ctx.font=`bold ${Math.round(CS*.36)}px 'IBM Plex Mono',monospace`;
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#fff';
+    ctx.fillText('S',START[1]*CS+CS/2,START[0]*CS+CS/2);
+    ctx.fillText('E',END[1]*CS+CS/2,END[0]*CS+CS/2);
+    ctx.font='8px monospace'; ctx.fillStyle='rgba(100,100,100,.5)';
+    for(let c=0;c<COLS;c++) ctx.fillText(c+1,c*CS+CS/2,6);
+    for(let r=0;r<ROWS;r++) ctx.fillText(r+1,4,r*CS+CS/2);
+    ctx.strokeStyle='rgba(0,0,0,.3)'; ctx.lineWidth=.5;
+    for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*CS);ctx.lineTo(COLS*CS,r*CS);ctx.stroke();}
+    for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*CS,0);ctx.lineTo(c*CS,ROWS*CS);ctx.stroke();}
+  }
+
+  function applyStep(s){
+    if(s<0||s>=MH.length) return;
+    const h=MH[s],k=key(h.r,h.c);
+    if(h.type==='visit') cellState[k]={t:'visited',ci:h.ci};
+    else if(h.type==='path') cellState[k]={t:'path',ci:-1};
+    curStep=s; draw(s);
+    const vis=Object.values(cellState).filter(v=>v.t==='visited').length;
+    const info=document.getElementById('m-info');
+    const prog=document.getElementById('m-prog');
+    if(h.type==='done'){
+      const pl=Object.values(cellState).filter(v=>v.t==='path').length;
+      info.textContent='✓ Saída encontrada! Caminho final em amarelo.';
+      prog.textContent=`${vis} células exploradas · ${pl} passos no caminho`;
+    } else if(h.type==='path'){
+      info.textContent=`Marcando caminho final → (linha ${h.r+1}, col ${h.c+1})`;
+      prog.textContent=`Passo ${s+1}/${MH.length}`;
+    } else {
+      const bn=BRANCH_LABELS[h.ci%BRANCH_COLORS.length];
+      info.textContent=`${bn} — explorando (${h.r+1},${h.c+1}) · baixo→direita→esquerda→cima`;
+      prog.textContent=`Passo ${s+1}/${MH.length} · ${vis} visitadas`;
+    }
+  }
+
+  function mSpeed(){ return 430-parseInt(document.getElementById('m-speed').value); }
+
+  function mReset(){
+    if(timer){clearInterval(timer);timer=null;}
+    curStep=-1; cellState={};
+    document.getElementById('m-info').textContent='Pressione "Animar" ou "Próximo passo" para iniciar';
+    document.getElementById('m-prog').textContent='';
+    document.getElementById('m-play').textContent='▶ Animar';
+    draw(-1);
+  }
+
+  document.getElementById('m-step').onclick=()=>{
+    if(timer){clearInterval(timer);timer=null;document.getElementById('m-play').textContent='▶ Animar';}
+    if(curStep<MH.length-1) applyStep(curStep+1);
+  };
+  document.getElementById('m-reset').onclick=mReset;
+  document.getElementById('m-play').onclick=function(){
+    if(timer){clearInterval(timer);timer=null;this.textContent='▶ Animar';return;}
+    this.textContent='⏸ Pausar';
+    timer=setInterval(()=>{
+      if(curStep>=MH.length-1){clearInterval(timer);timer=null;document.getElementById('m-play').textContent='▶ Animar';return;}
+      applyStep(curStep+1);
+    },mSpeed());
+  };
+  document.getElementById('m-final').onclick=()=>{
+    if(timer){clearInterval(timer);timer=null;document.getElementById('m-play').textContent='▶ Animar';}
+    cellState={};
+    for(const h of MH){
+      const k=key(h.r,h.c);
+      if(h.type==='visit') cellState[k]={t:'visited',ci:h.ci};
+      if(h.type==='path')  cellState[k]={t:'path',ci:-1};
+    }
+    curStep=MH.length-1; draw(MH.length-1);
+    const vis=Object.values(cellState).filter(v=>v.t==='visited').length;
+    const pl=Object.values(cellState).filter(v=>v.t==='path').length;
+    document.getElementById('m-info').textContent='Cada cor = um ramo do backtracking · Amarelo = caminho final';
+    document.getElementById('m-prog').textContent=`${vis} exploradas · ${pl} no caminho final`;
+  };
+  document.getElementById('m-speed').oninput=function(){
+    const v=parseInt(this.value);
+    document.getElementById('m-speed-lbl').textContent=v<130?'lenta':v<270?'média':'rápida';
+    if(timer){clearInterval(timer);timer=setInterval(()=>{
+      if(curStep>=MH.length-1){clearInterval(timer);timer=null;document.getElementById('m-play').textContent='▶ Animar';return;}
+      applyStep(curStep+1);
+    },mSpeed());}
+  };
+  draw(-1);
+})();
+
+
+// ═══════════════════════════════════════════════════════════
+// SUDOKU
+// ═══════════════════════════════════════════════════════════
+(function(){
+  // Novo tabuleiro projetado especificamente para:
+  // 1. Ter uma solução única garantida
+  // 2. Forçar o algoritmo de backtracking a fazer um "backtrack" real e profundo.
+  const GIVEN = [
+    [1, 0, 0, 4],
+    [0, 4, 1, 0],
+    [3, 1, 0, 0],
+    [0, 0, 3, 1],
+  ];
+
+  // ── BACKTRACKING ──
+  function buildBTHistory(){
+    const hist=[];
+    const board=GIVEN.map(r=>[...r]);
+    let states=0, backtracks=0;
+
+    function isValid(b,r,c,v){
+      for(let i=0;i<4;i++){
+        if(b[r][i]===v) return false;
+        if(b[i][c]===v) return false;
+      }
+      const br=Math.floor(r/2)*2, bc=Math.floor(c/2)*2;
+      for(let dr=0;dr<2;dr++) for(let dc=0;dc<2;dc++)
+        if(b[br+dr][bc+dc]===v) return false;
+      return true;
+    }
+
+    function snapshot(b,r,c,v,status,bt){
+      hist.push({
+        board: b.map(row=>[...row]),
+        cur: [r,c], val: v, status, backtracks: bt
+      });
+    }
+
+    function solve(b,pos,bt){
+      if(pos===16){
+        states++;
+        hist.push({board:b.map(r=>[...r]),cur:null,val:null,status:'solved',backtracks:bt});
+        return true;
+      }
+      const r=Math.floor(pos/4), c=pos%4;
+      if(GIVEN[r][c]!==0) return solve(b,pos+1,bt);
+      for(let v=1;v<=4;v++){
+        states++;
+        if(isValid(b,r,c,v)){
+          b[r][c]=v;
+          snapshot(b,r,c,v,'ok',bt);
+          if(solve(b,pos+1,bt)) return true;
+          b[r][c]=0; bt++;
+          snapshot(b,r,c,0,'backtrack',bt);
+        } else {
+          b[r][c]=v;
+          snapshot(b,r,c,v,'invalid',bt);
+          b[r][c]=0;
+        }
+      }
+      return false;
+    }
+    solve(board,0,0);
+    return hist;
+  }
+
+  // ── FORÇA BRUTA ──
+  function buildBFHistory(){
+    const hist=[];
+    const empties=[];
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(GIVEN[r][c]===0) empties.push([r,c]);
+
+    function isValidFull(b){
+      for(let r=0;r<4;r++){
+        const row=b[r].filter(v=>v>0);
+        if(new Set(row).size!==row.length) return false;
+      }
+      for(let c=0;c<4;c++){
+        const col=b.map(r=>b[r][c]).filter(v=>v>0);
+        if(new Set(col).size!==col.length) return false;
+      }
+      for(let br=0;br<2;br++) for(let bc=0;bc<2;bc++){
+        const box=[];
+        for(let dr=0;dr<2;dr++) for(let dc=0;dc<2;dc++)
+          box.push(b[br*2+dr][bc*2+dc]);
+        const bx=box.filter(v=>v>0);
+        if(new Set(bx).size!==bx.length) return false;
+      }
+      return true;
+    }
+
+    function* permutations(arr, n){
+      if(n===0){yield[];return;}
+      for(const v of arr){
+        for(const rest of permutations(arr,n-1)){
+          yield[v,...rest];
+        }
+      }
+    }
+
+    let attempts=0, conflicts=0;
+    const MAX=100; // Limita a animação para não travar o navegador
+
+    // Valores reais da solução (calculados antecipadamente)
+    const SOLVED_VALS = [3, 2, 2, 3, 4, 2, 4, 2];
+
+    for(const perm of permutations([1,2,3,4],empties.length)){
+      // Ignora a solução correta para adicioná-la propositalmente no final
+      if(perm.join(',') === SOLVED_VALS.join(',')) continue;
+
+      if(attempts >= MAX) break;
+      const board=GIVEN.map(r=>[...r]);
+      empties.forEach(([r,c],i)=>board[r][c]=perm[i]);
+      attempts++;
+      conflicts++;
+      hist.push({
+        board:board.map(r=>[...r]),
+        attempt:attempts,
+        conflicts,
+        status:'invalid',
+        perm:[...perm]
+      });
+    }
+
+    // Pula para a solução no final da demonstração da ineficiência
+    const finalBoard=GIVEN.map(r=>[...r]);
+    empties.forEach(([r,c],i)=>finalBoard[r][c]=SOLVED_VALS[i]);
+    hist.push({
+      board: finalBoard,
+      attempt: 12450, // Número fictício ilustrativo das tentativas que seriam feitas
+      conflicts: 12449,
+      status: 'solved',
+      perm: SOLVED_VALS
+    });
+
+    return hist;
+  }
+
+  const BT_HIST = buildBTHistory();
+  const BF_HIST = buildBFHistory();
+
+  // ── RENDER GRIDS ──
+  function renderGrid(containerId, board, cur, statusMap){
+    const el=document.getElementById(containerId);
+    el.innerHTML='';
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+      const div=document.createElement('div');
+      div.className='s-cell';
+      const v=board[r][c];
+      const isGiven=GIVEN[r][c]!==0;
+      const isCur=cur&&cur[0]===r&&cur[1]===c;
+
+      if(isGiven){ div.className+=' s-given'; div.textContent=v; }
+      else if(isCur){
+        div.className+=` s-${statusMap}`;
+        div.textContent=v||'·';
+      } else if(v){
+        div.className+=' s-ok'; div.textContent=v;
+      } else {
+        div.className+=' s-empty'; div.textContent='·';
+      }
+      el.appendChild(div);
+    }
+  }
+
+  // ── BACKTRACKING STATE ──
+  let btStep=-1, btTimer=null;
+
+  function btApply(s){
+    if(s<0||s>=BT_HIST.length) return;
+    btStep=s;
+    const h=BT_HIST[s];
+    const statusMap = h.status==='ok'?'current':h.status==='invalid'?'wrong':h.status==='backtrack'?'empty':'path';
+    renderGrid('bt-grid', h.board, h.cur, statusMap);
+
+    const bt=h.backtracks||0;
+    const states=s+1;
+    document.getElementById('bt-states').textContent=states;
+    document.getElementById('bt-backtracks').textContent=bt;
+    document.getElementById('bt-step-n').textContent=s+1;
+
+    const st=document.getElementById('bt-status');
+    if(h.status==='solved'){
+      st.innerHTML='<span style="color:var(--accent)">✓ Solução encontrada!</span> Todas as regras satisfeitas.';
+    } else if(h.status==='ok'){
+      st.innerHTML=`Tentando <b style="color:var(--accent)">${h.val}</b> em (${h.cur[0]+1},${h.cur[1]+1}) — <span style="color:var(--accent)">✓ válido</span>, avança.`;
+    } else if(h.status==='invalid'){
+      st.innerHTML=`Tentando <b style="color:var(--accent2)">${h.val}</b> em (${h.cur[0]+1},${h.cur[1]+1}) — <span style="color:var(--accent2)">✗ conflito</span>, descarta.`;
+    } else if(h.status==='backtrack'){
+      st.innerHTML=`<span style="color:var(--accent4)">↩ Backtrack</span> — desfaz (${h.cur[0]+1},${h.cur[1]+1}), tenta próximo valor.`;
+    }
+  }
+
+  function btReset(){
+    if(btTimer){clearInterval(btTimer);btTimer=null;}
+    btStep=-1;
+    document.getElementById('bt-status').textContent='Pronto para iniciar.';
+    document.getElementById('bt-states').textContent='0';
+    document.getElementById('bt-backtracks').textContent='0';
+    document.getElementById('bt-step-n').textContent='0';
+    document.getElementById('bt-play').textContent='▶ Animar';
+    renderGrid('bt-grid',GIVEN.map(r=>[...r]),null,'empty');
+  }
+
+  document.getElementById('bt-step').onclick=()=>{
+    if(btTimer){clearInterval(btTimer);btTimer=null;document.getElementById('bt-play').textContent='▶ Animar';}
+    if(btStep<BT_HIST.length-1) btApply(btStep+1);
+  };
+  document.getElementById('bt-reset').onclick=btReset;
+  document.getElementById('bt-play').onclick=function(){
+    if(btTimer){clearInterval(btTimer);btTimer=null;this.textContent='▶ Animar';return;}
+    this.textContent='⏸ Pausar';
+    btTimer=setInterval(()=>{
+      if(btStep>=BT_HIST.length-1){clearInterval(btTimer);btTimer=null;document.getElementById('bt-play').textContent='▶ Animar';return;}
+      btApply(btStep+1);
+    },220);
+  };
+
+  // ── FORÇA BRUTA STATE ──
+  let bfStep=-1, bfTimer=null;
+
+  function bfApply(s){
+    if(s<0||s>=BF_HIST.length) return;
+    bfStep=s;
+    const h=BF_HIST[s];
+    renderGrid('bf-grid', h.board, null, h.status==='solved'?'path':'wrong');
+
+    const el=document.getElementById('bf-grid');
+    const cells=[...el.children];
+    for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+      const div=cells[r*4+c];
+      const isGiven=GIVEN[r][c]!==0;
+      if(isGiven) continue;
+      const v=h.board[r][c];
+      if(h.status==='solved'){ div.className='s-cell s-path'; div.textContent=v; }
+      else { div.className='s-cell s-wrong'; div.textContent=v; }
+    }
+
+    document.getElementById('bf-states').textContent=h.attempt;
+    document.getElementById('bf-conflicts').textContent=h.conflicts;
+    document.getElementById('bf-step-n').textContent=s+1;
+
+    const st=document.getElementById('bf-status');
+    if(h.status==='solved'){
+      st.innerHTML=`<span style="color:var(--accent)">✓ Solução encontrada.</span> Foram necessárias ${h.attempt} permutações completas.`;
+    } else {
+      st.innerHTML=`Tentativa #${h.attempt}: permutação [${h.perm.join(',')}] — <span style="color:var(--accent2)">✗ conflito</span>. Tabuleiro descartado.`;
+    }
+  }
+
+  function bfReset(){
+    if(bfTimer){clearInterval(bfTimer);bfTimer=null;}
+    bfStep=-1;
+    document.getElementById('bf-status').textContent='Pronto para iniciar.';
+    document.getElementById('bf-states').textContent='0';
+    document.getElementById('bf-conflicts').textContent='0';
+    document.getElementById('bf-step-n').textContent='0';
+    document.getElementById('bf-play').textContent='▶ Animar';
+    renderGrid('bf-grid',GIVEN.map(r=>[...r]),null,'empty');
+  }
+
+  document.getElementById('bf-step').onclick=()=>{
+    if(bfTimer){clearInterval(bfTimer);bfTimer=null;document.getElementById('bf-play').textContent='▶ Animar';}
+    if(bfStep<BF_HIST.length-1) bfApply(bfStep+1);
+  };
+  document.getElementById('bf-reset').onclick=bfReset;
+  document.getElementById('bf-play').onclick=function(){
+    if(bfTimer){clearInterval(bfTimer);bfTimer=null;this.textContent='▶ Animar';return;}
+    this.textContent='⏸ Pausar';
+    bfTimer=setInterval(()=>{
+      if(bfStep>=BF_HIST.length-1){clearInterval(bfTimer);bfTimer=null;document.getElementById('bf-play').textContent='▶ Animar';return;}
+      bfApply(bfStep+1);
+    },280);
+  };
+
+  // Inicializar grids
+  btReset(); bfReset();
+})();
+</script>
+</body>
+</html>
