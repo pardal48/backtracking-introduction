@@ -334,6 +334,36 @@ canvas {
 }
 .sudoku-controls .ctrl-btn { flex: 1; min-width: 80px; font-size: 11px; padding: 5px 8px; }
 
+/* N-Queens 6x6 Grid */
+.queens-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3px;
+  margin: 0 auto 1rem;
+  max-width: 280px;
+}
+
+.q-cell {
+  aspect-ratio: 1;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  font-size: 20px;
+  border-radius: 3px;
+  border: 1px solid #2a2a2a;
+  transition: background .2s, border-color .2s, transform .1s;
+}
+
+/* Cores alternadas do tabuleiro de xadrez */
+.q-light { background: #1f1f1f; }
+.q-dark  { background: #141414; }
+
+/* Estados visuais do algoritmo */
+.q-checking  { background: rgba(247,162,78,.15); border-color: var(--accent4); color: var(--accent4); transform: scale(1.02); }
+.q-ok        { background: rgba(212,247,78,.15); border-color: rgba(212,247,78,.4); color: var(--accent); }
+.q-wrong     { background: rgba(247,78,78,.15); border-color: rgba(247,78,78,.4); color: var(--accent2); }
+.q-backtrack { background: rgba(247,78,78,.25); border-color: var(--accent2); color: #fff; }
+
 /* ── MEDIA QUERIES (RESPONSIVIDADE PARA CELULAR) ── */
 @media (max-width: 768px) { 
   .concept-grid { grid-template-columns: 1fr; } 
@@ -380,6 +410,7 @@ footer {
       <a href="#conceito" class="btn btn-accent">→ Ver conceito</a>
       <a href="#maze-section" class="btn">Labirinto</a>
       <a href="#sudoku-section" class="btn">Sudoku</a>
+      <a href="#queens-section" class="btn">N-Rainhas</a>  <!-- leva pra rainhas-->
     </div>
   </div>
 </section>
@@ -517,7 +548,37 @@ footer {
     </div>
   </div>
 </section>
+<!-- ═══════════════════ N rainhas ═══════════════════ -->
+<section class="section" id="queens-section">
+  <div class="section-tag">exemplo 3 — n-rainhas (6×6)</div>
+  <h2>O Problema das 6 Rainhas</h2>
+  <p class="section-desc">
+    O objetivo é posicionar 6 rainhas em um tabuleiro de xadrez de forma que nenhuma ataque a outra (mesma linha, coluna ou diagonais). 
+    O algoritmo avança linha por linha. Quando uma linha fica totalmente bloqueada pelos ataques das anteriores, o backtracking entra em ação desfazendo a linha anterior.
+  </p>
 
+  <div style="max-width: 460px; margin: 0 auto;">
+    <div class="sudoku-panel">
+      <span class="panel-label label-bt">6-Queens Backtracking</span>
+      <div class="sudoku-controls">
+        <button class="ctrl-btn primary" id="q-play">▶ Animar</button>
+        <button class="ctrl-btn" id="q-step">Próximo</button>
+        <button class="ctrl-btn" id="q-reset">↺ Reset</button>
+      </div>
+      
+      <div id="q-grid" class="queens-grid"></div>
+      
+      <div class="sudoku-status" id="q-status">Pronto para iniciar.</div>
+      
+      <div class="sudoku-stats">
+        <div class="stat"><div class="stat-n green" id="q-states">0</div><div class="stat-lbl">estados avaliados</div></div>
+        <div class="stat"><div class="stat-n green" id="q-backtracks">0</div><div class="stat-lbl">backtracks</div></div>
+        <div class="stat"><div class="stat-n green" id="q-step-n">0</div><div class="stat-lbl">passo atual</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+  
 <footer>
   BACKTRACKING · ALGORITMOS · ANÁLISE COMPARATIVA
 </footer>
@@ -999,6 +1060,149 @@ footer {
 
   // Inicializar grids
   btReset(); bfReset();
+})();
+
+// ═══════════════════════════════════════════════════════════
+// N-QUEENS (6x6)
+// ═══════════════════════════════════════════════════════════
+(function(){
+  const SIZE = 6;
+  const board = Array.from({length: SIZE}, () => Array(SIZE).fill(0));
+  const hist = [];
+  let states = 0, backtracks = 0;
+
+  // Validação das regras de ataque do Xadrez
+  function isValid(b, row, col) {
+    for (let i = 0; i < row; i++) {
+      if (b[i][col] === 1) return false;
+    }
+    for (let i = row, j = col; i >= 0 && j >= 0; i--, j--) {
+      if (b[i][j] === 1) return false;
+    }
+    for (let i = row, j = col; i >= 0 && j < SIZE; i--, j++) {
+      if (b[i][j] === 1) return false;
+    }
+    return true;
+  }
+
+  function snapshot(b, r, c, status, bt) {
+    hist.push({
+      board: b.map(row => [...row]),
+      cur: [r, c], status, backtracks: bt
+    });
+  }
+
+  // Algoritmo de Backtracking gerando histórico para animação
+  function solve(b, row) {
+    if (row === SIZE) {
+      states++;
+      hist.push({ board: b.map(r => [...r]), cur: null, status: 'solved', backtracks });
+      return true;
+    }
+
+    for (let col = 0; col < SIZE; col++) {
+      states++;
+      snapshot(b, row, col, 'checking', backtracks);
+
+      if (isValid(b, row, col)) {
+        b[row][col] = 1;
+        snapshot(b, row, col, 'ok', backtracks);
+
+        if (solve(b, row + 1)) return true;
+
+        // Se falhar adiante, limpa e faz o backtrack
+        b[row][col] = 0;
+        backtracks++;
+        snapshot(b, row, col, 'backtrack', backtracks);
+      } else {
+        snapshot(b, row, col, 'invalid', backtracks);
+      }
+    }
+    return false;
+  }
+
+  solve(board, 0);
+
+  // Renderização e Controles da UI
+  function renderGrid(board, cur, status) {
+    const el = document.getElementById('q-grid');
+    el.innerHTML = '';
+    
+    for (let r = 0; r < SIZE; r++) {
+      for (let c = 0; c < SIZE; c++) {
+        const div = document.createElement('div');
+        div.className = 'q-cell ' + ((r + c) % 2 === 0 ? 'q-light' : 'q-dark');
+        
+        const hasQueen = board[r][c] === 1;
+        const isCur = cur && cur[0] === r && cur[1] === c;
+
+        if (isCur) {
+          div.textContent = '👑';
+          if (status === 'checking') div.className += ' q-checking';
+          else if (status === 'invalid') div.className += ' q-wrong';
+          else if (status === 'ok') div.className += ' q-ok';
+          else if (status === 'backtrack') { div.className += ' q-backtrack'; div.textContent = '❌'; }
+        } else if (hasQueen) {
+          div.textContent = '👑';
+          div.className += ' q-ok';
+        }
+        el.appendChild(div);
+      }
+    }
+  }
+
+  let qStep = -1, qTimer = null;
+
+  function qApply(s) {
+    if (s < 0 || s >= hist.length) return;
+    qStep = s;
+    const h = hist[s];
+    renderGrid(h.board, h.cur, h.status);
+
+    document.getElementById('q-states').textContent = s + 1;
+    document.getElementById('q-backtracks').textContent = h.backtracks;
+    document.getElementById('q-step-n').textContent = s + 1;
+
+    const st = document.getElementById('q-status');
+    if (h.status === 'solved') {
+      st.innerHTML = '<span style="color:var(--accent)">✓ Sucesso!</span> 6 rainhas posicionadas em harmonia.';
+    } else if (h.status === 'checking') {
+      st.innerHTML = `Testando Rainha na linha ${h.cur[0] + 1}, coluna ${h.cur[1] + 1}...`;
+    } else if (h.status === 'ok') {
+      st.innerHTML = `<span style="color:var(--accent)">✓ Seguro!</span> Avançando para a linha ${h.cur[0] + 2}.`;
+    } else if (h.status === 'invalid') {
+      st.innerHTML = `<span style="color:var(--accent2)">✗ Ataque!</span> Posição (${h.cur[0] + 1}, ${h.cur[1] + 1}) inválida.`;
+    } else if (h.status === 'backtrack') {
+      st.innerHTML = `<span style="color:var(--accent4)">↩ Backtrack</span> — Linha ${h.cur[0] + 2} travou. Recuando Rainha anterior.`;
+    }
+  }
+
+  function qReset() {
+    if (qTimer) { clearInterval(qTimer); qTimer = null; }
+    qStep = -1;
+    document.getElementById('q-status').textContent = 'Pronto para iniciar.';
+    document.getElementById('q-states').textContent = '0';
+    document.getElementById('q-backtracks').textContent = '0';
+    document.getElementById('q-step-n').textContent = '0';
+    document.getElementById('q-play').textContent = '▶ Animar';
+    renderGrid(Array.from({length: SIZE}, () => Array(SIZE).fill(0)), null, 'empty');
+  }
+
+  document.getElementById('q-step').onclick = () => {
+    if (qTimer) { clearInterval(qTimer); qTimer = null; document.getElementById('q-play').textContent = '▶ Animar'; }
+    if (qStep < hist.length - 1) qApply(qStep + 1);
+  };
+  document.getElementById('q-reset').onclick = qReset;
+  document.getElementById('q-play').onclick = function() {
+    if (qTimer) { clearInterval(qTimer); qTimer = null; this.textContent = '▶ Animar'; return; }
+    this.textContent = '⏸ Pausar';
+    qTimer = setInterval(() => {
+      if (qStep >= hist.length - 1) { clearInterval(qTimer); qTimer = null; document.getElementById('q-play').textContent = '▶ Animar'; return; }
+      qApply(qStep + 1);
+    }, 250);
+  };
+
+  qReset();
 })();
 </script>
 </body>
